@@ -1,0 +1,530 @@
+---
+title: "Data manipulation: Maternal diet quality and brain morphology"
+author: "Yuchan Mou"
+date: "16/Mar/2022"
+output: html_document
+---
+
+# Set up in R studio 
+```{r global settings, include=FALSE, message=FALSE}
+# Global settings
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+options(knitr.table.format = "html")
+```
+
+```{r set working directory, include=FALSE, message=FALSE}
+.libPaths(r"(V:\HomeDir\044073(J. Mou)\Projects\temp_wd_r\library)")
+
+# WD settings
+getwd()
+
+load(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\DataManipulation_maternaldietBrain_2022-11-30.RData)')
+```
+
+````{r installpck, message = FALSE}
+packages <- c('haven', "tidyverse")
+invisible(lapply(packages, library, character.only = T))
+
+systime <- Sys.Date()
+analysis <- "maternaldietBrain"
+```
+
+
+# Load data 
+
+```{r exposure}
+mdietq <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\MOTHERDietScore_pregnancy_18052018.sav)') %>%
+  select('IDM', 'Energy_kcal_pregnancy', 'DietScore_pregnancy') %>% 
+  arrange(IDM)
+# individual components are not included in the dataset. Need to ask Trudy
+```
+
+
+```{r outcomes}
+## general MRI info data
+bcore <- readRDS(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\genr_mri_core_data_20220311.rds)') %>% 
+  select(idc,age_child_mri_f09, mri_consent_f09, t1_has_nii_f09, t1_asset_has_nii_f09, has_braces_mri_f09, exclude_incidental_f09, freesurfer_qc_f09, dti_has_nii_f09, dti_man_qc_f09, dti_auto_qc_f09, dti_overall_qc_f09,
+         qdec_has_lgi_f09,
+         age_child_mri_f13, mri_consent_f13, t1_has_nii_f13, has_braces_mri_f13, exclude_incidental_f13, freesurfer_qc_f13, dti_has_nii_f13, dti_man_qc_f13, dti_auto_qc_f13, dti_overall_qc_f13, qdec_has_lgi_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+path <- c(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\F09\)',
+          r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\F13\)')
+
+#------------------------  
+# F09
+## total brain volume, cerebral white/gray matter, subcortical gray matter volumes
+tbv_09 <- readRDS(paste(path[1], r'(f09_freesurfer_v6_09dec2016_tbv_stats_pull20june2017_v2.rds)', sep = "")) %>% 
+  select(idc, CerebralWhiteMatterVol_f09, CortexVol_f09, TotalGrayVol_f09, SubCortGrayVol_f09, SupraTentorialVol_f09, genr_tbv_f09, eTIV_f09) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+## prefrontal cortical volume
+pfc_09_1 <- readRDS(paste(path[1], r"(f09_freesurfer_v6_09dec2016_lobes_stats_pull06june2017.rds)", sep = "")) %>% 
+  select(idc, lh_frontal_vol_f09, rh_frontal_vol_f09) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+pfc_09_2 <- readRDS(paste(path[1], r"(f09_freesurfer_v6_09dec2016_aparc_stats_pull06june2017.rds)", sep = "")) %>% 
+  select(idc, lh_paracentral_vol_f09, rh_paracentral_vol_f09, lh_precentral_vol_f09, rh_precentral_vol_f09) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+## hippocampus and amygdala
+seg_09 <- readRDS(paste(path[1], r"(f09_freesurfer_v6_09dec2016_aseg_stats_pull06june2017_v1.rds)", sep = "")) %>% 
+  select(idc, Left_Amygdala_vol_f09, Right_Amygdala_vol_f09, Left_Hippocampus_vol_f09, Right_Hippocampus_vol_f09) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+## Fractional anisotropy and Mean diffusivity
+dti_f09 <- readRDS(paste(path[1], r"(f09_GenR_MRI_eddy_dipy_wls_14Feb2022_autoPtx_dti_stats_v1.rds)", sep = "")) %>% 
+  select(idc, cst_l_dti_dipy_wls_mean_FA_f09, cst_r_dti_dipy_wls_mean_FA_f09, 
+         cgc_l_dti_dipy_wls_mean_FA_f09, cgc_r_dti_dipy_wls_mean_FA_f09,
+         cgh_l_dti_dipy_wls_mean_FA_f09, cgh_r_dti_dipy_wls_mean_FA_f09, 
+         unc_l_dti_dipy_wls_mean_FA_f09, unc_r_dti_dipy_wls_mean_FA_f09, 
+         cst_l_dti_dipy_wls_mean_MD_f09, cst_r_dti_dipy_wls_mean_MD_f09, 
+         cgc_l_dti_dipy_wls_mean_MD_f09, cgc_r_dti_dipy_wls_mean_MD_f09, 
+         cgh_l_dti_dipy_wls_mean_MD_f09, cgh_r_dti_dipy_wls_mean_MD_f09, 
+         unc_l_dti_dipy_wls_mean_MD_f09, unc_r_dti_dipy_wls_mean_MD_f09) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+
+#------------------------  
+# F13
+## total brain volume, cerebral white/gray matter, subcortical gray matter volumes
+tbv_13 <- readRDS(paste(path[2], r'(f13_freesurfer_v6_14oct2020_tbv_stats_pull23Nov2020_v2.rds)', sep = "")) %>% 
+  select(idc, CerebralWhiteMatterVol_f13, CortexVol_f13, TotalGrayVol_f13, SubCortGrayVol_f13, SupraTentorialVol_f13, eTIV_f13, genr_tbv_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+## prefrontal cortical volume
+pfc_13_1 <- readRDS(paste(path[2], r"(f13_freesurfer_v6_29may2021_lobes_stats_pull23Nov2020.rds)", sep = "")) %>% 
+  select(idc, lh_frontal_vol_f13, rh_frontal_vol_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+pfc_13_2 <- readRDS(paste(path[2], r"(f13_freesurfer_v6_14oct2020_aparc_stats_pull23Nov2020.rds)", sep = "")) %>% 
+  select(idc, lh_paracentral_vol_f13, rh_paracentral_vol_f13, lh_precentral_vol_f13, rh_precentral_vol_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+## hippocampus and amygdala
+seg_13 <- readRDS(paste(path[2], r"(f13_freesurfer_v6_14oct2020_aseg_stats_pull23Nov2020_v1.rds)", sep = "")) %>% 
+  select(idc, Left_Amygdala_vol_f13, Right_Amygdala_vol_f13, Left_Hippocampus_vol_f13, Right_Hippocampus_vol_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+
+## Fractional anisotropy and Mean diffusivity
+dti_f13 <- readRDS(paste(path[2], r"(f13_GenR_MRI_eddy_dipy_wls_14Feb2022_autoPtx_dti_stats_v1.rds)", sep = "")) %>% 
+  select(idc, cst_l_dti_dipy_wls_mean_FA_f13, cst_r_dti_dipy_wls_mean_FA_f13, 
+         cgc_l_dti_dipy_wls_mean_FA_f13, cgc_r_dti_dipy_wls_mean_FA_f13,
+         cgh_l_dti_dipy_wls_mean_FA_f13, cgh_r_dti_dipy_wls_mean_FA_f13, 
+         unc_l_dti_dipy_wls_mean_FA_f13, unc_r_dti_dipy_wls_mean_FA_f13, 
+         cst_l_dti_dipy_wls_mean_MD_f13, cst_r_dti_dipy_wls_mean_MD_f13, 
+         cgc_l_dti_dipy_wls_mean_MD_f13, cgc_r_dti_dipy_wls_mean_MD_f13, 
+         cgh_l_dti_dipy_wls_mean_MD_f13, cgh_r_dti_dipy_wls_mean_MD_f13, 
+         unc_l_dti_dipy_wls_mean_MD_f13, unc_r_dti_dipy_wls_mean_MD_f13) %>% 
+  rename(IDC = idc) %>% 
+  arrange(IDC)
+
+```
+
+```{r cov}
+#all covariates
+cov <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\CHILD-ALLGENERALDATA_12112020.sav)') %>%  
+  select('IDC','IDM', "MOTHER", "PARTNER", "MULTIPLE", "RANKCHILD", 'TWIN', 'GESTBIR', 'WEIGHT',# twin birth, gestational age at birth, weight live birth
+         "COHORT1", "COHORT2", "FUPFASE1", "FASE1", "FASE2","FUPFASE2", "FUPFASE2_END", "STARTFASE3_5", "FUPFASE3_5", 
+         "VISIT5", "STARTFASE3_9", "FUPFASE3_9", "VISIT9", "FUPFASE4_13", "VISIT13", "INTAKE",
+         'AGE_M_v2', 'BMI_0', "PARITY", # parity
+         'GENDER',  'EDUCM', 'EDUCVM','INCOME', 'INCOME5', 'ETHNMv2', "ETHNINFv2") %>% 
+  mutate_at(c("GENDER", "EDUCM", "EDUCVM", 
+         "INCOME5", "INCOME", 
+         'ETHNINFv2', "ETHNMv2"), as_factor) %>% 
+  arrange(IDM)
+
+
+## smoking
+cov_smoke <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\3 Dietary patterns and brain morphology\2 data\cov\MATERNALSMOKING_22112016.sav)') %>%
+  select('idm', 'SMOKE_ALL') %>% 
+  rename(IDM = idm)
+
+## alcohol
+cov_alcoh <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\3 Dietary patterns and brain morphology\2 data\cov\GEDRAGSGROEP_MaternalDrinking_22112016.sav)') %>% 
+  select('IDM', 'mdrink_updated') %>% 
+  mutate_at(c('mdrink_updated'), as_factor) %>% 
+  arrange(IDM)
+
+## folic acid
+cov_folic <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\3 Dietary patterns and brain morphology\2 data\cov\MATERNALFOLICACID_23062010.sav)') %>% 
+  mutate_at(c('FOLIUM_VALIDATED'), as_factor) %>% 
+  arrange(IDM)
+  
+## BSI-prenatal
+cov_bsi <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\3 Dietary patterns and brain morphology\2 data\cov\GR1003-BSI D1_22112016.sav)') %>% 
+  select('IDM', 'gsi') %>% 
+  arrange(IDM)
+
+## pregnancy complication
+## preeclampsie is validated. Diabetes, preexisting hypertension and pregnancy induced hypertension is not validated. 
+cov_pregcomp <- haven::read_spss(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\MATERNALCOMPLICATIONS_22112016.sav)") %>% 
+  arrange(IDM)
+
+## puberty stage
+# can't find dataset. waiting for Lorenza's reply
+
+## breastfeeding 
+cov_breastfeeding <- haven::read_spss(r"(V:\HomeDir\044073(J. Mou)\Projects\2 Meta analysis - Obesity review-GenR\9. prediction model\data\CHILDBREASTFEEDING_18122017.sav)") %>% 
+  arrange(IDC) %>% 
+  select(IDC, AGESTOPB)
+
+## child diet quality 8y - mediator
+cov_cdq <- haven::read_spss(r"(V:\HomeDir\044073(J. Mou)\Projects\3 Dietary patterns and brain morphology\2 data\diet\CHILDDietScore_8y_18052018.sav)") %>% 
+  select("IDC", 'DietScore_8y') %>% 
+  arrange(IDC)
+
+## child IQ
+fsiq_13y <- haven::read_spss(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\CHILDWISC13_16082021.sav)") %>% 
+  arrange(IDC) %>% 
+  select(IDC, visitF13, AGECHILD13, WISC13_FSIQ, WISC13_Voc_Tscore, WISC13_MR_Tscore, WISC13_DS_Tscore, WISC13_CD_Tscore)
+
+```
+
+```{r merge dataset}
+dat_m <- mdietq %>% 
+  left_join(cov, by = 'IDM') %>% 
+  left_join(cov_smoke, by = 'IDM') %>% 
+  left_join(cov_alcoh, by = 'IDM') %>% 
+  left_join(cov_folic, by = 'IDM') %>% 
+  left_join(cov_bsi, by = 'IDM') %>%
+  left_join(cov_pregcomp, by = "IDM") %>% 
+  arrange(IDC)
+
+dat_c <- bcore %>% 
+  left_join(tbv_09, by = 'IDC') %>% 
+  left_join(tbv_13, by = 'IDC') %>% 
+  left_join(pfc_09_1, by = "IDC") %>% 
+  left_join(pfc_09_2, by = 'IDC') %>%
+  left_join(pfc_13_1, by = "IDC") %>% 
+  left_join(pfc_13_2, by = 'IDC') %>%
+  left_join(seg_09, by = 'IDC') %>% 
+  left_join(seg_13, by = "IDC") %>% 
+  left_join(dti_f09, by = "IDC") %>% 
+  left_join(dti_f13, by = "IDC") %>% 
+  left_join(cov_cdq, by = "IDC") %>% 
+  left_join(cov_breastfeeding, by = "IDC") %>% 
+  left_join(fsiq_13y, by = "IDC") %>% 
+  arrange(IDC)
+
+dat <- dat_c %>% 
+  arrange(IDC) %>% 
+  left_join(dat_m, by = 'IDC') %>% 
+  filter(!is.na("IDC"))
+```
+
+
+# Data manipulation 
+
+## 1.Recode variables
+
+### 1.1 volumes calculation and unit conversion
+```{r volumes and unit calculation}
+dat <- dat %>% mutate(#9y
+               # pfc mm3 -> cm3
+               lh_prefrontal_vol_f09 = lh_frontal_vol_f09 - lh_paracentral_vol_f09 - lh_precentral_vol_f09,
+               rh_prefrontal_vol_f09 = rh_frontal_vol_f09 - rh_paracentral_vol_f09 - rh_precentral_vol_f09,
+               prefrontal_vol_f09 = lh_prefrontal_vol_f09 + rh_prefrontal_vol_f09,
+               amygdala_vol_f09 = Left_Amygdala_vol_f09 + Right_Amygdala_vol_f09,
+               hippocampus_vol_f09 = Left_Hippocampus_vol_f09 + Right_Hippocampus_vol_f09, 
+               #FA
+               glb_mean_FA_f09 = (cst_l_dti_dipy_wls_mean_FA_f09 + cst_r_dti_dipy_wls_mean_FA_f09)/2,
+               cigulum_mean_FA_f09 = (cgc_l_dti_dipy_wls_mean_FA_f09 + cgc_r_dti_dipy_wls_mean_FA_f09 + 
+                                      cgh_l_dti_dipy_wls_mean_FA_f09 + cgh_r_dti_dipy_wls_mean_FA_f09)/4,
+               uncinate_mean_FA_f09 = (unc_l_dti_dipy_wls_mean_FA_f09 + unc_r_dti_dipy_wls_mean_FA_f09)/2,
+               # MD
+               glb_mean_MD_f09 = (cst_l_dti_dipy_wls_mean_MD_f09 + cst_r_dti_dipy_wls_mean_MD_f09)/2,
+               cigulum_mean_MD_f09 = (cgc_l_dti_dipy_wls_mean_MD_f09 + cgc_r_dti_dipy_wls_mean_MD_f09 + 
+                                      cgh_l_dti_dipy_wls_mean_MD_f09 + cgh_r_dti_dipy_wls_mean_MD_f09)/4,
+               uncinate_mean_MD_f09 = (unc_l_dti_dipy_wls_mean_MD_f09 + unc_r_dti_dipy_wls_mean_MD_f09)/2,
+               
+               # 13y
+               # pfc mm3 -> cm3
+               lh_prefrontal_vol_f13 = lh_frontal_vol_f13 - lh_paracentral_vol_f13 - lh_precentral_vol_f13,
+               rh_prefrontal_vol_f13 = rh_frontal_vol_f13 - rh_paracentral_vol_f13 - rh_precentral_vol_f13,
+               prefrontal_vol_f13 = lh_prefrontal_vol_f13 + rh_prefrontal_vol_f13,
+               amygdala_vol_f13 = Left_Amygdala_vol_f13 + Right_Amygdala_vol_f13,
+               hippocampus_vol_f13 = Left_Hippocampus_vol_f13 + Right_Hippocampus_vol_f13,
+               # FA
+               glb_mean_FA_f13 = (cst_l_dti_dipy_wls_mean_FA_f13 + cst_r_dti_dipy_wls_mean_FA_f13)/2,
+               cigulum_mean_FA_f13 = (cgc_l_dti_dipy_wls_mean_FA_f13 + cgc_r_dti_dipy_wls_mean_FA_f13 + 
+                                      cgh_l_dti_dipy_wls_mean_FA_f13 + cgh_r_dti_dipy_wls_mean_FA_f13)/4,
+               uncinate_mean_FA_f13 = (unc_l_dti_dipy_wls_mean_FA_f13 + unc_r_dti_dipy_wls_mean_FA_f13)/2,
+               # MD
+               glb_mean_MD_f13 = (cst_l_dti_dipy_wls_mean_MD_f13 + cst_r_dti_dipy_wls_mean_MD_f13)/2,
+               cigulum_mean_MD_f13 = (cgc_l_dti_dipy_wls_mean_MD_f13 + cgc_r_dti_dipy_wls_mean_MD_f13 + 
+                                      cgh_l_dti_dipy_wls_mean_MD_f13 + cgh_r_dti_dipy_wls_mean_MD_f13)/4,
+               uncinate_mean_MD_f13 = (unc_l_dti_dipy_wls_mean_MD_f13 + unc_r_dti_dipy_wls_mean_MD_f13)/2
+               ) %>% 
+  mutate(# unit conversion mm3 -> cm3
+        across(c(prefrontal_vol_f09, CerebralWhiteMatterVol_f09, CortexVol_f09, TotalGrayVol_f09, SubCortGrayVol_f09, SupraTentorialVol_f09, genr_tbv_f09, eTIV_f09,
+                 prefrontal_vol_f13, CerebralWhiteMatterVol_f13, CortexVol_f13, TotalGrayVol_f13, SubCortGrayVol_f13, SupraTentorialVol_f13, genr_tbv_f13, eTIV_f13), ~ .x/1000)
+        )
+
+```
+
+
+### 1.2 maternal education
+```{r}
+#fct_count(dat$EDUCVM, prop = T)
+# 'no education finished' and 'primary' only account for 0.05%.  Therefore collapse primary and secondary together
+
+dat$edu <- dat$EDUCVM %>% 
+  fct_collapse(high = c("higher, phase 1", "higher, phase 2"),
+               low = c("secondary, phase 1", "secondary, phase 2", 'no education finished', "primary")) %>% 
+  as.factor()
+
+# auxiliary vars
+dat$edu_a1 <- dat$EDUCM %>% 
+  fct_collapse(high = c("higher, phase 1", "higher, phase 2"),
+               low = c("secondary, phase 1", "secondary, phase 2", 'no education finished', "primary")) %>% 
+  as.factor()
+
+
+```
+
+### 1.3 Household income
+```{r}
+fct_count(dat$INCOME)
+
+dat$income_r <- dat$INCOME %>% 
+  fct_collapse(
+    '< 1200' = c("less than 450", 
+                 "450-600 euro", 
+                 "600-700 euro", 
+                 "700-800 euro", 
+                 "800-900 euro", 
+                 "900-1200 euro"), 
+    '1200 - 2200' = c("1200-1400 euro", 
+                      "1400-1600 euro", 
+                      "1600-1800 euro", 
+                      "1800-2000 euro", 
+                      "2000-2200 euro"), 
+    '> 2200' = c('> 2200 euro')) %>% 
+  as.factor()
+
+#auxiliary variables
+fct_count(dat$INCOME5)
+
+dat$income_a1 <- dat$INCOME5 %>% 
+  fct_collapse(
+    '< 1200' = c("Less than € 800", 
+                  "€ 800-1200"),
+    '1200 - 2400' = c("€ 1200-1600",
+                  "€ 1600-2000",
+                  "€ 2000-2400"), 
+    '> 2400' = c("€ 2400-2800",
+                  "€ 2800-3200",
+                  "€ 3200-4000",
+                  "€ 4000-4800",
+                  "€ 4800-5600",
+                  "More than € 5600")) %>% 
+  as.factor()
+
+```
+
+### 1.4 maternal ethnicity
+```{r}
+fct_count(dat$ETHNMv2)
+
+dat$ethm <- dat$ETHNMv2 %>% 
+  fct_collapse(
+    'Dutch' = c('Dutch'), 
+    'non‐Dutch Western' = c('Indonesian','American,western','Asian, western', 'European', "Oceanie"),
+    'non-Dutch non-Western' = c( 'Cape Verdian', 'Moroccan', 'Dutch Antilles', 'Surinamese', 'Turkish', 'African', 'American, non western', 'Asian, non western')
+    ) %>% 
+  as.factor()
+
+dat$ethc <- dat$ETHNINFv2 %>% 
+  fct_collapse(
+    'Dutch' = c('Dutch'), 
+    'non‐Dutch Western' = c('Indonesian','American,western','Asian, western', 'European', "Oceanie"),
+    'non-Dutch non-Western' = c( 'Cape Verdian', 'Moroccan', 'Dutch Antilles', 'Surinamese', 'Turkish', 'African', 'American, non western', 'Asian, non western')
+    ) %>% 
+  as.factor()
+
+```
+
+### 1.5 Mothers: alcohol during pregnancy
+incl. in the diet quality score. examine in a separate model.
+
+```{r}
+fct_count(dat$mdrink_updated)
+
+dat$drinkm <- dat$mdrink_updated %>% 
+  fct_collapse(
+    'mother continued drinking in pregnancy' = c(
+      'mother continued drinking occasionally',
+      'mother continued drinking frequently (1 or more glass/week for at least 2 trimesters)'
+    )
+  ) %>% 
+  as.factor()
+```
+
+### 1.6 Mothers: folic acid during pregnancy
+incl. in the diet quality score. examine in a separate model.
+
+```{r}
+fct_count(dat$FOLIUM_VALIDATED)
+
+dat$folic_acid <- dat$FOLIUM_VALIDATED %>% 
+  as.factor()
+```
+
+### 1.7 Mothers: Smoking during pregnancy
+```{r}
+dat$SMOKE_ALL <- dat$SMOKE_ALL %>%  
+  as.factor()
+fct_count(dat$SMOKE_ALL)
+```
+
+### 1.8 Mothers: breastfeeding duration
+```{r}
+dat$breastfeeding <- ifelse(dat$AGESTOPB < 2, 1, 
+                            ifelse(dat$AGESTOPB >= 2 & dat$AGESTOPB < 6, 2,
+                                   ifelse(dat$AGESTOPB >= 6, 3, NA)))
+
+dat$breastfeeding <- factor(dat$breastfeeding, levels = c(1,2,3), labels = c("< 2 months", "2-5.9 months", ">= 6 months"),  ordered = F)
+
+table(dat$breastfeeding, useNA = "always") 
+```
+
+# 1.9 Parity
+```{r}
+dat$parity <- ifelse(dat$PARITY == 0, 1,
+                     ifelse(dat$PARITY >1, 2, NA))
+dat$parity <- factor(dat$parity, levels = c(1,2), labels = c("nulliparity", "multiparity"))
+
+table(dat$parity, useNA = "always")
+```
+
+
+
+# Study population 
+
+```{r dataset 9y}
+dat_9y <- dat %>% 
+  # Mothers completed valid FFQ during pregnancy
+  # n = 6485
+  filter(!is.na(DietScore_pregnancy)) %>% 
+  
+  # Children who participated in phase 3, focus 9 years
+  # -> Exclude loss to follow-up# or did not participate at 9-10 years n = 1357
+  filter(FUPFASE3_9 == 1) %>% 
+  # 5128 participated at 9-10 years phase
+  
+  # -> Exclude no consent for MRI n = 2348
+  filter(mri_consent_f09 == "yes") %>% 
+  # n = 2780 underwent MRI scan
+  
+  # -> exclude without structural MRI data n = 33
+  filter(t1_has_nii_f09 == "yes"& t1_asset_has_nii_f09 != "exclude") %>% 
+  # n = 2747 with structural MRI data
+  
+  # exclude children with braces n = 65
+  filter(has_braces_mri_f09 == "no") %>%
+  # n = 2682
+  
+  # -> Exclude no/poor reconstruction on FreeSurfer n = 421
+  filter(freesurfer_qc_f09 == "usable") %>% 
+  # n = 2261 with usable structural MRI data
+  
+  # -> Exclude major incidental findings by radiological inspection n = 12
+  filter(exclude_incidental_f09 == "include") %>% 
+  
+  # -> exclude participants without gyrification data n = 26
+  filter(qdec_has_lgi_f09 == "yes")
+# FINAL n = 2223
+
+```
+
+```{r dataset 13y}
+dat_13y <- dat %>% 
+  # Mothers completed valid FFQ during pregnancy
+  # n = 6485
+  filter(!is.na(DietScore_pregnancy)) %>% 
+  
+  # Children who participated in phase 4, focus 13 years
+  # -> Exclude loss to follow-up# or did not participate at 13 years n = 1663
+  filter(FUPFASE4_13 == 1) %>% 
+  # 4822 participated at 13 years phase
+  
+  # -> Exclude no consent for MRI n = 2101
+  filter(mri_consent_f13 == "yes") %>% 
+  # n = 2721 underwent MRI scan
+  
+  # -> exclude without structural MRI data n = 80
+  filter(t1_has_nii_f13 == "yes") %>% 
+  # n = 2641 with structural MRI data
+  
+  # exclude children with braces n = 764
+  filter(has_braces_mri_f13 == "no") %>%
+  # n = 1877
+  
+  # -> Exclude no/poor reconstruction on FreeSurfer n = 276
+  filter(freesurfer_qc_f13 == "usable") %>% 
+  # n = 1601 with usable structural MRI data
+  
+  # -> Exclude major incidental findings by radiological inspection n = 9
+  filter(exclude_incidental_f13 == "include")  %>% 
+  
+  # -> Exclude participants without gyrification data n = 10
+  filter(qdec_has_lgi_f13 == "yes")
+# FINAL n = 1582
+
+```
+
+```{r longitudinal dataset}
+dat_9_13y <- dat %>% 
+  # Mothers completed valid FFQ during pregnancy
+  # n = 6485
+  filter(!is.na(DietScore_pregnancy)) %>% 
+  
+  # Children who participated in phase 4, focus 13 years
+  # -> Exclude loss to follow-up# or did not participate at 13 years n = 1357
+  filter(FUPFASE4_13 == 1) %>% 
+  # 5128 participated at 13 years phase
+  
+  # -> Exclude no consent for MRI n = 2348
+  filter(mri_consent_f09 == "yes" & mri_consent_f13 == "yes") %>% 
+  # n = 2780 underwent MRI scan
+  
+  # -> exclude without structural MRI data n = 33
+  filter(t1_has_nii_f09 == "yes"& t1_asset_has_nii_f09 != "exclude" & t1_has_nii_f13 == "yes") %>% 
+  # n = 2747 with structural MRI data
+  
+  # exclude children with braces n = 65
+  filter(has_braces_mri_f09 == "no" & has_braces_mri_f13 == "no") %>%
+  # n = 2682
+  
+  # -> Exclude no/poor reconstruction on FreeSurfer n = 421
+  filter(freesurfer_qc_f09 == "usable" & freesurfer_qc_f13 == "usable") %>% 
+  # n = 2261 with usable structural MRI data
+  
+  # -> Exclude major incidental findings by radiological inspection n = 12
+  filter(exclude_incidental_f09 == "include" & exclude_incidental_f13 == "include") %>% 
+  
+  # -> Exclude participants without gyrification data n = 16
+  filter(qdec_has_lgi_f09 == "yes" & qdec_has_lgi_f13 == "yes")
+# FINAL n = 872
+
+```
+
+# Save datasets 
+```{r save datasets, include = FALSE}
+save(dat, dat_9y, dat_13y, dat_9_13y, file = paste(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\DataManipulation_)', analysis, "_", systime, '.RData', sep = ''))
+
+```
+
+
