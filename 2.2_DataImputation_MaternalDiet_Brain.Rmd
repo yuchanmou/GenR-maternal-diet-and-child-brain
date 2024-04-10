@@ -448,7 +448,8 @@ propplot(imp_13y, strip.text = element_text(size = 14))
 
 ```
 
-
+------ UPDATE 2024-02-01 -----------------------------------
+------ By Yuchan Mou ---------------------------------------
 # Add variables
 ## add raw WISC subscores
 ```{r}
@@ -630,13 +631,29 @@ table(imp_13y_dti_quartile$cdq_tertile, useNA = "always")
 imp_13y_dti <- as.mids(imp_13y_dti_quartile, .id = ".id")
 ```
 
+------ UPDATE 2024-04-10 -----------------------------------
+------ By Hong Sun ---------------------------------------
+# Add variables
+  - Add diet quality component scores
+```{r}
 
-Final dataset after imputation is imp_9y and imp_13y.
+```
+
+
+```{r}
+#Data Manipulation ------------------------
+
+# add diet quality component scores 
+
+# back to mids
+
+```
+
+
+Final datasets after imputation are imp_9y and imp_13y.
 
 
 Save as RDS file
-
-
 
 ```{r}
 
