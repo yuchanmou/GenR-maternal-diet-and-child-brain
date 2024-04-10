@@ -642,8 +642,9 @@ imp_13y_dti <- as.mids(imp_13y_dti_quartile, .id = ".id")
 
 ```{r}
 #Data Manipulation ------------------------
+# calculate diet quality scores excluding certain component
 
-# add diet quality component scores 
+# add diet quality scores excluding certain component in the imputed datasets
 
 # back to mids
 
