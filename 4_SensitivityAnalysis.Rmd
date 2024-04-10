@@ -496,3 +496,9 @@ write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Materna
 ```
 
 
+# Diet quality score without folic acid supplementation component
+```{r}
+
+```
+
+
