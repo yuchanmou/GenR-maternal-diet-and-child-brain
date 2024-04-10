@@ -1,0 +1,356 @@
+---
+title: 'Overview for Imputation: Maternal diet and brain morphology'
+author: "Yuchan Mou"
+date: "17/Mar/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r global settings, include=FALSE, message=FALSE}
+# Global settings
+
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+options(knitr.table.format = "html")
+```
+
+```{r set working directory, include=FALSE, message=FALSE}
+# WD settings
+getwd()
+
+```
+
+````{r installpck, message = FALSE}
+# install packages
+Sys.setenv(JAGS_HOME = r"(V:\HomeDir\044073(J. Mou)\program\JAGS)")
+
+packages <- c('haven', 'tidyverse', 'sjmisc', 'ggcorrplot', 'kableExtra', 'mice', 'JointAI')
+invisible(lapply(packages, library, character.only = T))
+```
+
+------
+```{r load data}
+load(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\DataManipulation_maternaldietBrain_2022-03-17.RData)')
+```
+
+
+------
+## DATA 9 years
+## Description: unimputed data
+
+### 1. Distribution
+
+The plots below shows the distributions of exposures, outcomes and covariates.
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_num <- dat_9y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy, AGE_M_v2, 
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09, 
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         age_child_mri_f09, age_child_mri_f13, DietScore_8y, gsi, BMI_0) %>% 
+  as.data.frame()
+
+par(mfrow = c(4,4))
+
+plot_all(dat_num)
+
+```
+
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_cat <- dat_9y %>% 
+  select(GENDER, edu, income_r, ethm, ethc, SMOKE_ALL, drinkm, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+par(mfrow = c(3,3))
+
+plot_all(dat_cat)
+
+
+```
+
+### 2. Correlation matrix
+```{r,  fig.width = 15 , fig.height = 15}
+dat_9y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f09, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  mutate_if(is.factor, as.numeric) %>% 
+  cor(use = 'pairwise.complete.obs', method = 'spearman') %>% 
+  ggcorrplot(hc.order = TRUE, 
+             type = "lower",
+             lab = TRUE)
+
+```
+
+### 3. Missing percentage
+```{r}
+dat_impcheck <- dat_9y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f09, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+# Proportion of missing values 
+prop_missing <- cbind(
+  "#" = table(ifelse(complete.cases(dat_impcheck), 'complete', 'incompl.')),
+  '%' = round(100 * sort(table(complete.cases(dat_impcheck)))/nrow(dat_impcheck) , 2)
+)
+
+# Proportion of missing values per variable
+prop_missing_pervar <- as.data.frame(cbind(
+  "# NA" = sort(colSums(is.na(dat_impcheck))),
+  "% NA" = round(sort(colMeans(is.na(dat_impcheck))) * 100, 2)))
+
+kable(prop_missing) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", 'responsive'), full_width = F )
+
+prop_missing_pervar %>% 
+  filter(`# NA` != 0) %>% 
+  tibble::rownames_to_column(var = 'Variables') %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", 'condensed'), full_width = T )
+
+# write.table(tbl_missing, file = 'proportion of missings_1y.txt', sep = ',', quote = F, row.names = F)
+
+```
+
+
+## Covariates imputation
+
+### 1. Missing patterns
+
+```{r missing patterns 9y,  fig.width = 10 , fig.height = 30}
+
+md_pattern(dat_impcheck, pattern = T)$plot
+
+```
+
+
+------
+## DATA 13 years
+## Description: unimputed data
+
+### 1. Distribution
+
+The plots below shows the distributions of exposures, outcomes and covariates.
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_num <- dat_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy, AGE_M_v2, 
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09, 
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         age_child_mri_f09, age_child_mri_f13, DietScore_8y, gsi, BMI_0) %>% 
+  as.data.frame()
+
+par(mfrow = c(4,4))
+
+plot_all(dat_num)
+
+```
+
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_cat <- dat_13y %>% 
+  select(GENDER, edu, income_r, ethm, ethc, SMOKE_ALL, drinkm, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+par(mfrow = c(3,3))
+
+plot_all(dat_cat)
+
+
+```
+
+### 2. Correlation matrix
+```{r,  fig.width = 15 , fig.height = 15}
+dat_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f13, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  mutate_if(is.factor, as.numeric) %>% 
+  cor(use = 'pairwise.complete.obs', method = 'spearman') %>% 
+  ggcorrplot(hc.order = TRUE, 
+             type = "lower",
+             lab = TRUE)
+
+```
+
+### 3. Missing percentage
+```{r}
+dat_impcheck <- dat_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f13, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+# Proportion of missing values 
+prop_missing <- cbind(
+  "#" = table(ifelse(complete.cases(dat_impcheck), 'complete', 'incompl.')),
+  '%' = round(100 * sort(table(complete.cases(dat_impcheck)))/nrow(dat_impcheck) , 2)
+)
+
+# Proportion of missing values per variable
+prop_missing_pervar <- as.data.frame(cbind(
+  "# NA" = sort(colSums(is.na(dat_impcheck))),
+  "% NA" = round(sort(colMeans(is.na(dat_impcheck))) * 100, 2)))
+
+kable(prop_missing) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", 'responsive'), full_width = F )
+
+prop_missing_pervar %>% 
+  filter(`# NA` != 0) %>% 
+  tibble::rownames_to_column(var = 'Variables') %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", 'condensed'), full_width = T )
+
+# write.table(tbl_missing, file = 'proportion of missings_1y.txt', sep = ',', quote = F, row.names = F)
+
+```
+
+
+## Covariates imputation
+
+### 1. Missing patterns
+
+```{r missing patterns 13y,  fig.width = 10 , fig.height = 30}
+
+md_pattern(dat_impcheck, pattern = T)$plot
+
+```
+
+
+------
+## DATA 9 and 13 years
+## Description: unimputed data
+
+### 1. Distribution
+
+The plots below shows the distributions of exposures, outcomes and covariates.
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_num <- dat_9_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy, AGE_M_v2, 
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09, 
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+        glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         age_child_mri_f09, age_child_mri_f13, DietScore_8y, gsi, BMI_0) %>% 
+  as.data.frame()
+
+par(mfrow = c(4,4))
+
+plot_all(dat_num)
+
+```
+
+
+```{r,  fig.width = 10 , fig.height = 10}
+dat_cat <- dat_9_13y %>% 
+  select(GENDER, edu, income_r, ethm, ethc, SMOKE_ALL, drinkm, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+par(mfrow = c(3,3))
+
+plot_all(dat_cat)
+
+
+```
+
+### 2. Correlation matrix
+```{r,  fig.width = 15 , fig.height = 15}
+dat_9_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09,
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f13, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  mutate_if(is.factor, as.numeric) %>% 
+  cor(use = 'pairwise.complete.obs', method = 'spearman') %>% 
+  ggcorrplot(hc.order = TRUE, 
+             type = "lower",
+             lab = TRUE)
+
+```
+
+### 3. Missing percentage
+```{r}
+dat_impcheck <- dat_9_13y %>% 
+  select(DietScore_pregnancy, Energy_kcal_pregnancy,
+         prefrontal_vol_f09, hippocampus_vol_f09, amygdala_vol_f09, glb_mean_FA_f09, cigulum_mean_FA_f09, uncinate_mean_FA_f09,
+         glb_mean_MD_f09, cigulum_mean_MD_f09, uncinate_mean_MD_f09,
+         prefrontal_vol_f13, hippocampus_vol_f13, amygdala_vol_f13, glb_mean_FA_f13, cigulum_mean_FA_f13, uncinate_mean_FA_f13,
+         glb_mean_MD_f13, cigulum_mean_MD_f13, uncinate_mean_MD_f13,
+         AGE_M_v2, DietScore_8y, gsi, 
+         age_child_mri_f13, 
+         GENDER, edu, edu_a1, 
+         income_r, income_a1,
+         ethm, ethc, drinkm, SMOKE_ALL, folic_acid, breastfeeding) %>% 
+  as.data.frame()
+
+# Proportion of missing values 
+prop_missing <- cbind(
+  "#" = table(ifelse(complete.cases(dat_impcheck), 'complete', 'incompl.')),
+  '%' = round(100 * sort(table(complete.cases(dat_impcheck)))/nrow(dat_impcheck) , 2)
+)
+
+# Proportion of missing values per variable
+prop_missing_pervar <- as.data.frame(cbind(
+  "# NA" = sort(colSums(is.na(dat_impcheck))),
+  "% NA" = round(sort(colMeans(is.na(dat_impcheck))) * 100, 2)))
+
+kable(prop_missing) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", 'responsive'), full_width = F )
+
+prop_missing_pervar %>% 
+  filter(`# NA` != 0) %>% 
+  tibble::rownames_to_column(var = 'Variables') %>% 
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", 'condensed'), full_width = T )
+
+# write.table(tbl_missing, file = 'proportion of missings_1y.txt', sep = ',', quote = F, row.names = F)
+
+```
+
+
+## Covariates imputation
+
+### 1. Missing patterns
+
+```{r missing patterns 9en13y,  fig.width = 10 , fig.height = 30}
+
+md_pattern(dat_impcheck, pattern = T)$plot
+
+```
+

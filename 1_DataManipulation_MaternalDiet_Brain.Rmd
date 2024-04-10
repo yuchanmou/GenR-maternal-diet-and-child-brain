@@ -1,7 +1,7 @@
 ---
 title: "Data manipulation: Maternal diet quality and brain morphology"
 author: "Yuchan Mou"
-date: "16/Mar/2022"
+date: "26/Jan/2024"
 output: html_document
 ---
 
@@ -521,9 +521,32 @@ dat_9_13y <- dat %>%
 
 ```
 
+# Non-respondent dataset 
+
+```{r}
+dat_non_9y <- dat %>% 
+  # Mothers completed valid FFQ during pregnancy
+  # n = 6485
+  filter(!is.na(DietScore_pregnancy))
+
+dat_non_9y$non_res <-  if_else(dat_non_9y$IDC %in% dat_9y$IDC, "respondents", "non-respondents")
+
+dat_non_13y <- dat %>% 
+  # Mothers completed valid FFQ during pregnancy
+  # n = 6485
+  filter(!is.na(DietScore_pregnancy))
+
+dat_non_13y$non_res <-  if_else(dat_non_13y$IDC %in% dat_13y$IDC, "respondents", "non-respondents")
+
+```
+
+
+
 # Save datasets 
 ```{r save datasets, include = FALSE}
 save(dat, dat_9y, dat_13y, dat_9_13y, file = paste(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\DataManipulation_)', analysis, "_", systime, '.RData', sep = ''))
+
+save(dat_non_9y,dat_non_13y, file = paste(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\nonresponse_)', analysis, "_", systime, '.RData', sep = ''))
 
 ```
 

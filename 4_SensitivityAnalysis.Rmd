@@ -1,0 +1,498 @@
+---
+title: "Sensitivity_analysis"
+author: "Yuchan Mou"
+date: "1/30/2024"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r set working directory, include=FALSE, message=FALSE}
+.libPaths(r"(V:\HomeDir\044073(J. Mou)\Projects\temp_wd_r\library)")
+
+# WD settings
+getwd()
+```
+
+````{r installpck, message = FALSE}
+packages <- c('haven', "tidyverse", "tableone", "mice")
+invisible(lapply(packages, library, character.only = T))
+
+systime <- Sys.Date()
+analysis <- "maternaldietBrain"
+```
+
+```{r load data}
+load(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\nonresponse_maternaldietBrain_2024-01-26.RData)")
+
+#9 years ------------------------
+#Your data 
+analysis = "MDP_brain"
+afterimp_rdsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\imp_mdq_brain_2022-11-30.RData)"
+modsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\dp_brain_9y.mods)"
+detsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\dietarypatterns_mothers.dets)"
+
+
+#out
+outsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\volume_9y.outs)"
+
+
+#load data
+fdata <- load(afterimp_rdsfile)
+models = as.character(as.list(read.table(modsfile,header=F, sep = '\t'))[[1]])
+#model 3 is the main model, model 4 + breastfeeding, model 5 + diet quality@8y, model 6 + both
+fmodels = c(models[1:2], paste(models[3:6], '+ eTIV_f09'))
+
+dets=as.character(as.list(read.table(detsfile,header=F, sep = '\t'))[[1]])
+outs=as.character(as.list(read.table(outsfile,header=F, sep = '\t'))[[1]])
+
+#13 years ------------------------
+#Your data 
+analysis = "MDP_brain"
+afterimp_rdsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\imp_mdq_brain_2022-11-30.RData)"
+modsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\dp_brain_13y.mods)"
+detsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\dietarypatterns_mothers.dets)"
+
+
+#out
+outsfile = r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\syntax\MaternalDiet_Brain\volume_13y.outs)"
+
+
+#load data
+fdata <- load(afterimp_rdsfile)
+models = as.character(as.list(read.table(modsfile,header=F, sep = '\t'))[[1]])
+#model 3 is the main model, model 4 + breastfeeding, model 5 + diet quality@8y, model 6 + both
+fmodels = c(models[1:2], paste(models[3:6], '+ eTIV_f13'))
+
+dets=as.character(as.list(read.table(detsfile,header=F, sep = '\t'))[[1]])
+outs=as.character(as.list(read.table(outsfile,header=F, sep = '\t'))[[1]])
+
+```
+
+
+# Non-response analysis
+```{r}
+varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f09', 'DietScore_8y',
+               'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity")
+catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity")
+
+# 9 years ------------------------------------
+tblone_9y <- CreateTableOne(data = dat_non_9y, strata = "non_res", vars = varlist, factorVars = catvarlist,  testNonNormal = kruskal.test)
+
+#check if missing
+summary(tblone_9y)
+
+#IQR
+varlist_iqr <- c("gsi", "AgeChildBrainMRIF9")
+
+
+tbl1 <- print(tblone_9y, nonnormal = varlist_iqr, contDigits = 1, catDigits = 1, noSpaces = T, format = "fp")
+tbl1 <- as.data.frame(tbl1)
+write.xlsx(tbl1, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\nonresponse_10y)", analysis, systime, '.xlsx', sep = ''), noSpace = T, rowNames = TRUE, colNames = TRUE)
+
+
+# 13 years -----------------------------------
+varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f13', 'DietScore_8y',
+               'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity")
+catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity")
+
+tblone_13y <- CreateTableOne(data = dat_non_13y, strata = "non_res", vars = varlist, factorVars = catvarlist,  testNonNormal = kruskal.test)
+
+#check if missing
+summary(tblone_13y)
+
+#IQR
+varlist_iqr <- c("gsi", "AgeChildBrainMRIF9")
+
+
+tbl1 <- print(tblone_13y, nonnormal = varlist_iqr, contDigits = 1, catDigits = 1, noSpaces = T, format = "fp")
+tbl1 <- as.data.frame(tbl1)
+write.xlsx(tbl1, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\nonresponse_13y)", analysis, systime, '.xlsx', sep = ''), noSpace = T, rowNames = TRUE, colNames = TRUE)
+```
+
+
+# Dutch mothers only
+
+```{r}
+# dutch mothers only
+imp_9y_dutch <- mice::filter(imp_9y, ethm == "Dutch")
+
+# model1
+analysis = "Dutch_9y_"
+#allocate output
+dets1 = dets[1]
+models = c("age_child_mri_f09 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy",
+           "age_child_mri_f09 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy + DietScore_8y")
+
+
+coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
+colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
+count <- 0
+
+for (o in outs) {
+    for (d in dets1) {
+      for (m in 1:length(models)) {
+        count <- count + 1
+        # Run regression
+        fit <- imp_9y_dutch %>%
+          mice::complete("all") %>%
+          lapply(lm, formula = paste(o, '~', d, '+', models[m], sep = ''))
+        res <- summary(pool(fit), conf.int = T)
+        # Round values
+        res <- res %>%
+          mutate_at(c("estimate", "2.5 %", "97.5 %"), round, 2) %>%
+          mutate_at(c("p.value"), round, 4)
+        # Save results
+        coefs[count, 1] <- gsub(" ","_",Sys.time())
+        coefs[count, 2] <- o
+        coefs[count, 3] <- d
+        coefs[count, 4] <- m
+        coefs[count, 5] <- res$estimate[2]
+        coefs[count, 6] <- paste(res$`2.5 %`[2], ',', ' ', res$`97.5 %`[2], sep = '')
+        coefs[count, 7] <- res$p.value[2]
+      }
+    }
+   }
+
+
+## The following syntax concerns converting a results file with beta, confidence interval(combined ci.lo and ci.hi)
+## and p value from a LONG format to a WIDE format.
+
+# Format table
+# Empty template
+mod_tbl <- as.data.frame(matrix(NA,nrow=1,ncol=20))
+colnames(mod_tbl) <- c('Structures', "Dietary patterns",
+                       'beta_mod1', '95ci_mod1', 'pvalue_mod1',
+                       'beta_mod2', '95ci_mod2', 'pvalue_mod2',
+                       'beta_mod3', '95ci_mod3', 'pvalue_mod3',
+                       'beta_mod4', '95ci_mod4', 'pvalue_mod4',
+                       'beta_mod5', '95ci_mod5', 'pvalue_mod5',
+                       'beta_mod6', '95ci_mod6', 'pvalue_mod6')
+count <- 0
+
+
+for (o in outs) {
+  for (d in dets1) {
+    sep_coefs <- coefs %>%
+      filter(Structure == o) %>%
+      filter(`Dietary patterns` == d)
+    count <- count + 1
+    # Loop through each model.In this case, four models
+    mod_tbl[count, 1] <- o
+    mod_tbl[count, 2] <- d
+    mod_tbl[count, 3] <- sep_coefs$Beta[1]
+    mod_tbl[count, 4] <- sep_coefs$CI[1]
+    mod_tbl[count, 5] <- sep_coefs$P[1]
+    mod_tbl[count, 6] <- sep_coefs$Beta[2]
+    mod_tbl[count, 7] <- sep_coefs$CI[2]
+    mod_tbl[count, 8] <- sep_coefs$P[2]
+    mod_tbl[count, 9] <- sep_coefs$Beta[3]
+    mod_tbl[count, 10] <- sep_coefs$CI[3]
+    mod_tbl[count, 11] <- sep_coefs$P[3]
+    mod_tbl[count, 12] <- sep_coefs$Beta[4]
+    mod_tbl[count, 13] <- sep_coefs$CI[4]
+    mod_tbl[count, 14] <- sep_coefs$P[4]
+    mod_tbl[count, 15] <- sep_coefs$Beta[5]
+    mod_tbl[count, 16] <- sep_coefs$CI[5]
+    mod_tbl[count, 17] <- sep_coefs$P[5]
+    mod_tbl[count, 18] <- sep_coefs$Beta[6]
+    mod_tbl[count, 19] <- sep_coefs$CI[6]
+    mod_tbl[count, 20] <- sep_coefs$P[6]
+  }
+}
+
+
+write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_9y_)", analysis, systime, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
+
+
+```
+
+
+```{r}
+# dutch mothers only
+imp_13y_dutch <- mice::filter(imp_13y, ethm == "Dutch")
+
+# model1
+analysis = "Dutch_13y_"
+#allocate output
+dets1 = dets[1]
+models = c("age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy",
+           "age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy + DietScore_8y")
+
+
+coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
+colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
+count <- 0
+
+for (o in outs) {
+    for (d in dets1) {
+      for (m in 1:length(models)) {
+        count <- count + 1
+        # Run regression
+        fit <- imp_13y_dutch %>%
+          mice::complete("all") %>%
+          lapply(lm, formula = paste(o, '~', d, '+', models[m], sep = ''))
+        res <- summary(pool(fit), conf.int = T)
+        # Round values
+        res <- res %>%
+          mutate_at(c("estimate", "2.5 %", "97.5 %"), round, 2) %>%
+          mutate_at(c("p.value"), round, 4)
+        # Save results
+        coefs[count, 1] <- gsub(" ","_",Sys.time())
+        coefs[count, 2] <- o
+        coefs[count, 3] <- d
+        coefs[count, 4] <- m
+        coefs[count, 5] <- res$estimate[2]
+        coefs[count, 6] <- paste(res$`2.5 %`[2], ',', ' ', res$`97.5 %`[2], sep = '')
+        coefs[count, 7] <- res$p.value[2]
+      }
+    }
+   }
+
+
+## The following syntax concerns converting a results file with beta, confidence interval(combined ci.lo and ci.hi)
+## and p value from a LONG format to a WIDE format.
+
+# Format table
+# Empty template
+mod_tbl <- as.data.frame(matrix(NA,nrow=1,ncol=20))
+colnames(mod_tbl) <- c('Structures', "Dietary patterns",
+                       'beta_mod1', '95ci_mod1', 'pvalue_mod1',
+                       'beta_mod2', '95ci_mod2', 'pvalue_mod2',
+                       'beta_mod3', '95ci_mod3', 'pvalue_mod3',
+                       'beta_mod4', '95ci_mod4', 'pvalue_mod4',
+                       'beta_mod5', '95ci_mod5', 'pvalue_mod5',
+                       'beta_mod6', '95ci_mod6', 'pvalue_mod6')
+count <- 0
+
+
+for (o in outs) {
+  for (d in dets1) {
+    sep_coefs <- coefs %>%
+      filter(Structure == o) %>%
+      filter(`Dietary patterns` == d)
+    count <- count + 1
+    # Loop through each model.In this case, four models
+    mod_tbl[count, 1] <- o
+    mod_tbl[count, 2] <- d
+    mod_tbl[count, 3] <- sep_coefs$Beta[1]
+    mod_tbl[count, 4] <- sep_coefs$CI[1]
+    mod_tbl[count, 5] <- sep_coefs$P[1]
+    mod_tbl[count, 6] <- sep_coefs$Beta[2]
+    mod_tbl[count, 7] <- sep_coefs$CI[2]
+    mod_tbl[count, 8] <- sep_coefs$P[2]
+    mod_tbl[count, 9] <- sep_coefs$Beta[3]
+    mod_tbl[count, 10] <- sep_coefs$CI[3]
+    mod_tbl[count, 11] <- sep_coefs$P[3]
+    mod_tbl[count, 12] <- sep_coefs$Beta[4]
+    mod_tbl[count, 13] <- sep_coefs$CI[4]
+    mod_tbl[count, 14] <- sep_coefs$P[4]
+    mod_tbl[count, 15] <- sep_coefs$Beta[5]
+    mod_tbl[count, 16] <- sep_coefs$CI[5]
+    mod_tbl[count, 17] <- sep_coefs$P[5]
+    mod_tbl[count, 18] <- sep_coefs$Beta[6]
+    mod_tbl[count, 19] <- sep_coefs$CI[6]
+    mod_tbl[count, 20] <- sep_coefs$P[6]
+  }
+}
+
+
+write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_13y_)", analysis, systime, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
+```
+
+
+
+# non-Dutch mothers
+
+```{r}
+"non-Dutch non-Western"
+# non-dutch mothers only
+imp_9y_nondutch <- mice::filter(imp_9y, ethm != "Dutch")
+
+# model1
+analysis = "nonDutch_9y_"
+#allocate output
+dets1 = dets[1]
+models = c("age_child_mri_f09 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy",
+           "age_child_mri_f09 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy + DietScore_8y")
+
+
+coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
+colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
+count <- 0
+
+for (o in outs) {
+    for (d in dets1) {
+      for (m in 1:length(models)) {
+        count <- count + 1
+        # Run regression
+        fit <- imp_9y_nondutch %>%
+          mice::complete("all") %>%
+          lapply(lm, formula = paste(o, '~', d, '+', models[m], sep = ''))
+        res <- summary(pool(fit), conf.int = T)
+        # Round values
+        res <- res %>%
+          mutate_at(c("estimate", "2.5 %", "97.5 %"), round, 2) %>%
+          mutate_at(c("p.value"), round, 4)
+        # Save results
+        coefs[count, 1] <- gsub(" ","_",Sys.time())
+        coefs[count, 2] <- o
+        coefs[count, 3] <- d
+        coefs[count, 4] <- m
+        coefs[count, 5] <- res$estimate[2]
+        coefs[count, 6] <- paste(res$`2.5 %`[2], ',', ' ', res$`97.5 %`[2], sep = '')
+        coefs[count, 7] <- res$p.value[2]
+      }
+    }
+   }
+
+
+## The following syntax concerns converting a results file with beta, confidence interval(combined ci.lo and ci.hi)
+## and p value from a LONG format to a WIDE format.
+
+# Format table
+# Empty template
+mod_tbl <- as.data.frame(matrix(NA,nrow=1,ncol=20))
+colnames(mod_tbl) <- c('Structures', "Dietary patterns",
+                       'beta_mod1', '95ci_mod1', 'pvalue_mod1',
+                       'beta_mod2', '95ci_mod2', 'pvalue_mod2',
+                       'beta_mod3', '95ci_mod3', 'pvalue_mod3',
+                       'beta_mod4', '95ci_mod4', 'pvalue_mod4',
+                       'beta_mod5', '95ci_mod5', 'pvalue_mod5',
+                       'beta_mod6', '95ci_mod6', 'pvalue_mod6')
+count <- 0
+
+
+for (o in outs) {
+  for (d in dets1) {
+    sep_coefs <- coefs %>%
+      filter(Structure == o) %>%
+      filter(`Dietary patterns` == d)
+    count <- count + 1
+    # Loop through each model.In this case, four models
+    mod_tbl[count, 1] <- o
+    mod_tbl[count, 2] <- d
+    mod_tbl[count, 3] <- sep_coefs$Beta[1]
+    mod_tbl[count, 4] <- sep_coefs$CI[1]
+    mod_tbl[count, 5] <- sep_coefs$P[1]
+    mod_tbl[count, 6] <- sep_coefs$Beta[2]
+    mod_tbl[count, 7] <- sep_coefs$CI[2]
+    mod_tbl[count, 8] <- sep_coefs$P[2]
+    mod_tbl[count, 9] <- sep_coefs$Beta[3]
+    mod_tbl[count, 10] <- sep_coefs$CI[3]
+    mod_tbl[count, 11] <- sep_coefs$P[3]
+    mod_tbl[count, 12] <- sep_coefs$Beta[4]
+    mod_tbl[count, 13] <- sep_coefs$CI[4]
+    mod_tbl[count, 14] <- sep_coefs$P[4]
+    mod_tbl[count, 15] <- sep_coefs$Beta[5]
+    mod_tbl[count, 16] <- sep_coefs$CI[5]
+    mod_tbl[count, 17] <- sep_coefs$P[5]
+    mod_tbl[count, 18] <- sep_coefs$Beta[6]
+    mod_tbl[count, 19] <- sep_coefs$CI[6]
+    mod_tbl[count, 20] <- sep_coefs$P[6]
+  }
+}
+
+
+write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_9y_)", analysis, systime, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
+
+
+```
+
+
+```{r}
+# nondutch mothers only
+imp_13y_nondutch <- mice::filter(imp_13y, ethm != "Dutch")
+
+# model1
+analysis = "nonDutch_13y_"
+#allocate output
+dets1 = dets[1]
+models = c("age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy",
+           "age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + SMOKE_ALL + gsi + Energy_kcal_pregnancy + DietScore_8y")
+
+
+coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
+colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
+count <- 0
+
+for (o in outs) {
+    for (d in dets1) {
+      for (m in 1:length(models)) {
+        count <- count + 1
+        # Run regression
+        fit <- imp_13y_nondutch %>%
+          mice::complete("all") %>%
+          lapply(lm, formula = paste(o, '~', d, '+', models[m], sep = ''))
+        res <- summary(pool(fit), conf.int = T)
+        # Round values
+        res <- res %>%
+          mutate_at(c("estimate", "2.5 %", "97.5 %"), round, 2) %>%
+          mutate_at(c("p.value"), round, 4)
+        # Save results
+        coefs[count, 1] <- gsub(" ","_",Sys.time())
+        coefs[count, 2] <- o
+        coefs[count, 3] <- d
+        coefs[count, 4] <- m
+        coefs[count, 5] <- res$estimate[2]
+        coefs[count, 6] <- paste(res$`2.5 %`[2], ',', ' ', res$`97.5 %`[2], sep = '')
+        coefs[count, 7] <- res$p.value[2]
+      }
+    }
+   }
+
+
+## The following syntax concerns converting a results file with beta, confidence interval(combined ci.lo and ci.hi)
+## and p value from a LONG format to a WIDE format.
+
+# Format table
+# Empty template
+mod_tbl <- as.data.frame(matrix(NA,nrow=1,ncol=20))
+colnames(mod_tbl) <- c('Structures', "Dietary patterns",
+                       'beta_mod1', '95ci_mod1', 'pvalue_mod1',
+                       'beta_mod2', '95ci_mod2', 'pvalue_mod2',
+                       'beta_mod3', '95ci_mod3', 'pvalue_mod3',
+                       'beta_mod4', '95ci_mod4', 'pvalue_mod4',
+                       'beta_mod5', '95ci_mod5', 'pvalue_mod5',
+                       'beta_mod6', '95ci_mod6', 'pvalue_mod6')
+count <- 0
+
+
+for (o in outs) {
+  for (d in dets1) {
+    sep_coefs <- coefs %>%
+      filter(Structure == o) %>%
+      filter(`Dietary patterns` == d)
+    count <- count + 1
+    # Loop through each model.In this case, four models
+    mod_tbl[count, 1] <- o
+    mod_tbl[count, 2] <- d
+    mod_tbl[count, 3] <- sep_coefs$Beta[1]
+    mod_tbl[count, 4] <- sep_coefs$CI[1]
+    mod_tbl[count, 5] <- sep_coefs$P[1]
+    mod_tbl[count, 6] <- sep_coefs$Beta[2]
+    mod_tbl[count, 7] <- sep_coefs$CI[2]
+    mod_tbl[count, 8] <- sep_coefs$P[2]
+    mod_tbl[count, 9] <- sep_coefs$Beta[3]
+    mod_tbl[count, 10] <- sep_coefs$CI[3]
+    mod_tbl[count, 11] <- sep_coefs$P[3]
+    mod_tbl[count, 12] <- sep_coefs$Beta[4]
+    mod_tbl[count, 13] <- sep_coefs$CI[4]
+    mod_tbl[count, 14] <- sep_coefs$P[4]
+    mod_tbl[count, 15] <- sep_coefs$Beta[5]
+    mod_tbl[count, 16] <- sep_coefs$CI[5]
+    mod_tbl[count, 17] <- sep_coefs$P[5]
+    mod_tbl[count, 18] <- sep_coefs$Beta[6]
+    mod_tbl[count, 19] <- sep_coefs$CI[6]
+    mod_tbl[count, 20] <- sep_coefs$P[6]
+  }
+}
+
+
+write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_13y_)", analysis, systime, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
+```
+
+
