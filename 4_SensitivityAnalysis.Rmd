@@ -495,6 +495,17 @@ for (o in outs) {
 write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_13y_)", analysis, systime, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
 ```
 
+# Models + intracranial volumes 
+# 9 years
+```{r}
+
+```
+
+# 13 years
+```{r}
+
+```
+
 
 # Diet quality score without folic acid supplementation component
 ```{r}
