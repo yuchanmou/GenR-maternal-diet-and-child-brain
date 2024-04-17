@@ -1,6 +1,6 @@
 age_child_mri_f13 + GENDER
 age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm
-age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + folic_acid + Energy_kcal_pregnancy
-age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + folic_acid + Energy_kcal_pregnancy + breastfeeding
-age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + folic_acid + Energy_kcal_pregnancy + DietScore_8y
-age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + folic_acid + Energy_kcal_pregnancy + breastfeeding + DietScore_8y
+age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + Energy_kcal_pregnancy
+age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + Energy_kcal_pregnancy + breastfeeding
+age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + Energy_kcal_pregnancy + DietScore_8y
+age_child_mri_f13 + GENDER + AGE_M_v2 + edu + income_r + ethm + SMOKE_ALL + gsi + Energy_kcal_pregnancy + breastfeeding + DietScore_8y
