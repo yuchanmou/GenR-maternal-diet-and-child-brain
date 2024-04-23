@@ -463,6 +463,10 @@ bcore <- readRDS(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain
   arrange(idc) %>% 
   rename(IDC = idc) %>% 
   select(IDC, folders_f09, folders_f13)
+
+folate <- haven::read_spss(r'(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\data\MOTHERPREGNANCY-FolicAcid_17072015.sav)') %>% 
+  arrange(IDM) %>% 
+  select(IDM, folicacid_g1)
 ```
 
 
@@ -509,6 +513,11 @@ imp_9y_quartile <- imp_9y_quartile %>%
 imp_9y_quartile <- imp_9y_quartile %>% 
   arrange(IDC) %>% 
   left_join(bcore, by = 'IDC')  
+
+# add folate level
+imp_9y_quartile <- imp_9y_quartile %>% 
+  arrange(IDC) %>% 
+  left_join(folate, by = 'IDM') 
 
 #back to mids
 imp_9y <- as.mids(imp_9y_quartile, .id = ".id")
@@ -592,6 +601,10 @@ imp_13y_quartile <- imp_13y_quartile %>%
   arrange(IDC) %>% 
   left_join(bcore, by = 'IDC')  
 
+# add folate level
+imp_13y_quartile <- imp_13y_quartile %>% 
+  arrange(IDC) %>% 
+  left_join(folate, by = 'IDM') 
 
 #back to mids
 imp_13y <- as.mids(imp_13y_quartile, .id = ".id")
