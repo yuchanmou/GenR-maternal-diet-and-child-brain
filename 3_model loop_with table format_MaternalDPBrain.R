@@ -46,7 +46,7 @@ dat_afimp$GENDER <- as.factor(dat_afimp$GENDER)
 # var list
 varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f09', 'DietScore_8y',
                'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 'mdq_quartile', "cdq_tertile",
-             "WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw")
+             "WISC13_FSIQ", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
 catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 
                 'mdq_quartile', "cdq_tertile")
 
@@ -396,7 +396,7 @@ analysis = "MDP_IQ_"
 #allocate output
 dets1 = dets[1]
 
-iq <- c("WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw")
+iq <- c("WISC13_FSIQ", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
 
 coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
 colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
@@ -510,7 +510,7 @@ dat_afimp$GENDER <- as.factor(dat_afimp$GENDER)
 # var list
 varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f13', 'DietScore_8y',
              'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 'mdq_quartile', "cdq_tertile",
-             "WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw")
+             "WISC13_FSIQ", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
 catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 
                 'mdq_quartile', "cdq_tertile")
 
@@ -851,96 +851,6 @@ for (o in outs) {
 
 
 write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_quartiles_13y_)", analysis, analysis_date, '.xlsx', sep = ''), row.names = FALSE, col.names = TRUE)
-
-
-#Regression - IQ ------------------------
-
-analysis = "MDP_IQ_"
-
-#allocate output
-dets1 = dets[1]
-
-iq <- c("WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw")
-
-coefs <- as.data.frame(matrix(NA,nrow=1,ncol=7))
-colnames(coefs) <- c("DateTime","Structure","Dietary patterns","Model","Beta","CI","P")
-count <- 0
-
-for (o in iq) {
-  for (d in dets1) {
-    for (m in 1:length(models)) {
-      count <- count + 1
-      # Run regression
-      fit <- imp_13y %>%
-        mice::complete("all") %>%
-        lapply(lm, formula = paste(o, '~', d, '+', models[m], sep = ''))
-      res <- summary(pool(fit), conf.int = T)
-      # Round values
-      res <- res %>%
-        mutate_at(c("estimate", "2.5 %", "97.5 %"), round, 2) %>%
-        mutate_at(c("p.value"), round, 4)
-      
-      # Save results
-      coefs[count, 1] <- gsub(" ","_",Sys.time())
-      coefs[count, 2] <- o
-      coefs[count, 3] <- d
-      coefs[count, 4] <- m
-      coefs[count, 5] <- res$estimate[2]
-      coefs[count, 6] <- paste(res$`2.5 %`[2], ',', ' ', res$`97.5 %`[2], sep = '')
-      coefs[count, 7] <- res$p.value[2]
-    }
-  }
-}
-
-## The following syntax concerns converting a results file with beta, confidence interval(combined ci.lo and ci.hi)
-## and p value from a LONG format to a WIDE format.
-
-# Format table
-# Empty template
-mod_tbl <- as.data.frame(matrix(NA,nrow=1,ncol=20))
-colnames(mod_tbl) <- c('Structures', "Dietary patterns",
-                       'beta_mod1', '95ci_mod1', 'pvalue_mod1',
-                       'beta_mod2', '95ci_mod2', 'pvalue_mod2',
-                       'beta_mod3', '95ci_mod3', 'pvalue_mod3',
-                       'beta_mod4', '95ci_mod4', 'pvalue_mod4',
-                       'beta_mod5', '95ci_mod5', 'pvalue_mod5',
-                       'beta_mod6', '95ci_mod6', 'pvalue_mod6')
-count <- 0
-
-
-for (o in iq) {
-  for (d in dets1) {
-    sep_coefs <- coefs %>%
-      filter(Structure == o) %>%
-      filter(`Dietary patterns` == d)
-    count <- count + 1
-    # Loop through each model.In this case, four models
-    mod_tbl[count, 1] <- o
-    mod_tbl[count, 2] <- d
-    mod_tbl[count, 3] <- sep_coefs$Beta[1]
-    mod_tbl[count, 4] <- sep_coefs$CI[1]
-    mod_tbl[count, 5] <- sep_coefs$P[1]
-    mod_tbl[count, 6] <- sep_coefs$Beta[2]
-    mod_tbl[count, 7] <- sep_coefs$CI[2]
-    mod_tbl[count, 8] <- sep_coefs$P[2]
-    mod_tbl[count, 9] <- sep_coefs$Beta[3]
-    mod_tbl[count, 10] <- sep_coefs$CI[3]
-    mod_tbl[count, 11] <- sep_coefs$P[3]
-    mod_tbl[count, 12] <- sep_coefs$Beta[4]
-    mod_tbl[count, 13] <- sep_coefs$CI[4]
-    mod_tbl[count, 14] <- sep_coefs$P[4]
-    mod_tbl[count, 15] <- sep_coefs$Beta[5]
-    mod_tbl[count, 16] <- sep_coefs$CI[5]
-    mod_tbl[count, 17] <- sep_coefs$P[5]
-    mod_tbl[count, 18] <- sep_coefs$Beta[6]
-    mod_tbl[count, 19] <- sep_coefs$CI[6]
-    mod_tbl[count, 20] <- sep_coefs$P[6]
-  }
-}
-
-
-write.xlsx(mod_tbl, file = paste(r"(V:\HomeDir\044073(J. Mou)\Projects\4 Maternal diet and brain morphology\results\mdq_13y_)", analysis, analysis_date, '.xlsx', sep = ''), rowNames = FALSE, colNames = TRUE)
-
 
 
 # Plot brain morphology trajectory over 10-13 years -------------------------
