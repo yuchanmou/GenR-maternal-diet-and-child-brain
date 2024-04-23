@@ -46,7 +46,7 @@ dat_afimp$GENDER <- as.factor(dat_afimp$GENDER)
 # var list
 varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f09', 'DietScore_8y',
                'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 'mdq_quartile', "cdq_tertile",
-             "WISC13_FSIQ", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
+             "WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
 catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 
                 'mdq_quartile', "cdq_tertile")
 
@@ -510,7 +510,7 @@ dat_afimp$GENDER <- as.factor(dat_afimp$GENDER)
 # var list
 varlist <- c('gsi', 'DietScore_pregnancy', 'age_child_mri_f13', 'DietScore_8y',
              'AGE_M_v2', 'edu', 'income_r', 'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 'mdq_quartile', "cdq_tertile",
-             "WISC13_FSIQ", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
+             "WISC13_FSIQ", "WISC13_Voc_Raw", "WISC13_MR_Raw", "WISC13_DS_Raw", "WISC13_CD_Raw", "WISC13_Voc_Tscore", "WISC13_MR_Tscore", "WISC13_DS_Tscore", "WISC13_CD_Tscore")
 catvarlist <- c('edu', 'income_r',  'SMOKE_ALL', 'GENDER', 'ethm', 'breastfeeding', "parity", 
                 'mdq_quartile', "cdq_tertile")
 
