@@ -1,0 +1,8 @@
+#!/bin/sh
+#SBATCH -t 24:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+module load freesurfer
+export SUBJECTS_DIR=/mnt/data/genr/mrdata/GenR_MRI/bids/derivatives/freesurfer/6.0.0/qdecr
+module load R/3.6.3
+Rscript /home/r044073/maternal_diet/script/mdq_brain_jan24.R

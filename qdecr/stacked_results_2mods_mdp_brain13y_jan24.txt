@@ -1,0 +1,212 @@
+#in R 3.6.3
+library(QDECR)
+
+setwd("/home/r044073/maternal_diet/year13")
+
+##### LGI #####
+#RH
+rh_lgi <- qdecr_load('rh.dq1_model2.pial_lgi/rh.dq1_model2.pial_lgi.rds')
+
+f2_rh_lgi_path <- 'rh.dq1_model2.pial_lgi/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_rh_lgi_path <- 'rh.dq1_model1.pial_lgi/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_rh_lgi <-load.mgh(f2_rh_lgi_path)
+f1_rh_lgi <-load.mgh(f1_rh_lgi_path)
+
+f2_rh_lgi$x <- ifelse(f2_rh_lgi$x == 0, 0,1)
+f1_rh_lgi$x <- ifelse(f1_rh_lgi$x == 0, 0,1)
+
+#try
+table(f2_rh_lgi$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_lgi <- f1_rh_lgi
+overlapping_lgi$x <- f1_rh_lgi$x + f2_rh_lgi$x
+
+#again, try:
+table(overlapping_lgi$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+hemi='rh'
+save.mgh(overlapping_lgi, fname = paste(hemi, "2mod_myOverlappingClusters_lgi.mgh", sep='.'))
+
+#LH
+lh_lgi <- qdecr_load('lh.dq1_model2.pial_lgi/lh.dq1_model2.pial_lgi.rds')
+
+f2_lh_lgi_path <- 'lh.dq1_model2.pial_lgi/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_lh_lgi_path <- 'lh.dq1_model1.pial_lgi/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_lh_lgi <-load.mgh(f2_lh_lgi_path)
+f1_lh_lgi <-load.mgh(f1_lh_lgi_path)
+
+f2_lh_lgi$x <- ifelse(f2_lh_lgi$x == 0, 0,1)
+f1_lh_lgi$x <- ifelse(f1_lh_lgi$x == 0, 0,1)
+
+#try
+table(f2_lh_lgi$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_lgi <- f1_lh_lgi
+overlapping_lgi$x <- f1_lh_lgi$x + f2_lh_lgi$x
+
+#again, try:
+table(overlapping_lgi$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+hemi='lh'
+save.mgh(overlapping_lgi, fname = paste(hemi, "2mod_myOverlappingClusters_lgi.mgh", sep='.'))
+
+##### SA #####
+#LH
+lh_sa <- qdecr_load('lh.dq1_model2.area.pial/lh.dq1_model2.area.pial.rds')
+
+f2_lh_sa_path <- 'lh.dq1_model2.area.pial/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_lh_sa_path <- 'lh.dq1_model1.area.pial/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_lh_sa <-load.mgh(f2_lh_sa_path)
+f1_lh_sa <-load.mgh(f1_lh_sa_path)
+
+f2_lh_sa$x <- ifelse(f2_lh_sa$x == 0, 0,1)
+f1_lh_sa$x <- ifelse(f1_lh_sa$x == 0, 0,1)
+
+#try
+table(f2_lh_sa$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_sa <- f1_lh_sa
+overlapping_sa$x <- f1_lh_sa$x + f2_lh_sa$x
+
+#again, try:
+table(overlapping_sa$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+
+hemi='lh'
+save.mgh(overlapping_sa, fname = paste(hemi, "2mod_myOverlappingClusters_sa.mgh", sep='.'))
+
+
+#RH
+rh_sa <- qdecr_load('rh.dq1_model2.area.pial/rh.dq1_model2.area.pial.rds')
+
+f2_rh_sa_path <- 'rh.dq1_model2.area.pial/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_rh_sa_path <- 'rh.dq1_model1.area.pial/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_rh_sa <-load.mgh(f2_rh_sa_path)
+f1_rh_sa <-load.mgh(f1_rh_sa_path)
+
+f2_rh_sa$x <- ifelse(f2_rh_sa$x == 0, 0,1)
+f1_rh_sa$x <- ifelse(f1_rh_sa$x == 0, 0,1)
+
+#try
+table(f2_rh_sa$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_sa <- f1_rh_sa
+overlapping_sa$x <- f2_rh_sa$x + f1_rh_sa$x
+
+#again, try:
+table(overlapping_sa$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+
+hemi='rh'
+save.mgh(overlapping_sa, fname = paste(hemi, "2mod_myOverlappingClusters_sa.mgh", sep='.'))
+
+
+##### CT #####
+#LH
+lh_ct <- qdecr_load('lh.dq1_model2.thickness/lh.dq1_model2.thickness.rds')
+
+f2_lh_ct_path <- 'lh.dq1_model2.thickness/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_lh_ct_path <- 'lh.dq1_model1.thickness/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_lh_ct <-load.mgh(f2_lh_ct_path)
+f1_lh_ct <-load.mgh(f1_lh_ct_path)
+
+f2_lh_ct$x <- ifelse(f2_lh_ct$x == 0, 0,1)
+f1_lh_ct$x <- ifelse(f1_lh_ct$x == 0, 0,1)
+
+#try
+table(f2_lh_ct$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_ct <- f1_lh_ct
+overlapping_ct$x <- f2_lh_ct$x + f1_lh_ct$x
+
+#again, try:
+table(overlapping_ct$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+
+hemi='lh'
+save.mgh(overlapping_ct, fname = paste(hemi, "2mod_myOverlappingClusters_ct.mgh", sep='.'))
+
+
+#RH
+rh_ct <- qdecr_load('rh.dq1_model2.thickness/rh.dq1_model2.thickness.rds')
+
+f2_rh_ct_path <- 'rh.dq1_model2.thickness/stack2.cache.th30.abs.sig.ocn.mgh'
+f1_rh_ct_path <- 'rh.dq1_model1.thickness/stack2.cache.th30.abs.sig.ocn.mgh'
+
+f2_rh_ct <-load.mgh(f2_rh_ct_path)
+f1_rh_ct <-load.mgh(f1_rh_ct_path)
+
+f2_rh_ct$x <- ifelse(f2_rh_ct$x == 0, 0,1)
+f1_rh_ct$x <- ifelse(f1_rh_ct$x == 0, 0,1)
+
+#try
+table(f2_rh_ct$x)
+#you'll see 0 where it is nonsignificant, and 1 where it is significant. This will match what is in you summary files
+
+
+overlapping_ct <- f1_rh_ct
+overlapping_ct$x <- f2_rh_ct$x + f1_rh_ct$x
+
+#again, try:
+table(overlapping_ct$x)
+#0 non sig, 1 sig only in the first file, 2 significant in first and second file
+
+hemi='rh'
+save.mgh(overlapping_ct, fname = paste(hemi, "2mod_myOverlappingClusters_ct.mgh", sep='.'))
+
+
+----------------------
+#now in Bash
+#you need a 'color table', or ctab file that will link the values in the mgh file to a color.
+#examples can be found here(For >2 models):
+
+ctabDir=/home/r044073/
+ctab=${ctabDir}/ctabPos.txt 
+
+##### LGI #####
+hemi=rh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg rh.2mod_myOverlappingClusters_lgi.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_lgi --s fsaverage --hemi ${hemi}
+
+hemi=lh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg lh.2mod_myOverlappingClusters_lgi.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_lgi --s fsaverage --hemi ${hemi}
+
+##### SA #####
+hemi=rh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg rh.2mod_myOverlappingClusters_sa.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_sa --s fsaverage --hemi ${hemi}
+
+hemi=lh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg lh.2mod_myOverlappingClusters_sa.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_sa --s fsaverage --hemi ${hemi}
+
+##### CT #####
+hemi=rh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg rh.2mod_myOverlappingClusters_ct.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_ct --s fsaverage --hemi ${hemi}
+
+hemi=lh
+oDir=/home/r044073/maternal_diet/year13
+mris_seg2annot --seg lh.2mod_myOverlappingClusters_ct.mgh --ctab ${ctab} --o $oDir/${hemi}.dq1.annot_ct --s fsaverage --hemi ${hemi}
+
+## colour table
+##1  M1            245  0  0    0
+##2  M2            245  120  0    0
+##3  M3            245  190  0    0
+##4  M4            245  255  0    0

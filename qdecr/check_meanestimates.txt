@@ -1,0 +1,2 @@
+vw <- qdecr_load("/home/r044073/DP_brain/eightyear_pca_derived_prudent/lh.prudent8_model3.area.pial/")
+summary(vw, annot = T)
