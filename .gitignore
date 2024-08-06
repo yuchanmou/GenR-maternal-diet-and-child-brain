@@ -30,4 +30,5 @@ vignettes/*.pdf
 *.Rproj
 long_formart_llm.R
 
+.DS_Store
 *.html
